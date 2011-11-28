@@ -1,0 +1,2 @@
+This is a port of json_shape ( https://github.com/jes5199/json_shape ) to Clojure.
+It's not quite finished.
