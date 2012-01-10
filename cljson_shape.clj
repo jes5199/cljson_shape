@@ -18,7 +18,7 @@
         (let [
             ~'fail (fn [~'s] (fail-at ~'path ~'s))
             ~'refine (fn [~'ff] (~'ff ~'x ~'path))
-            ~'delve (fn [~'index ~'rule ~'val] (~'rule ~'x (concat ~'path "/" ~'index))
+            ~'delve (fn [~'index ~'rule ~'val] (~'rule ~'x (concat ~'path "/" ~'index)))
           ]
           ~body
         )
@@ -91,13 +91,13 @@
     ( if-not (map? x) (fail "isn't an object") )
     ( if (:keys param)
       (map
-        (fn [key] (delve key (:keys params) keys))
+        (fn [key] (delve key (:keys param) keys))
         (keys x)
       )
     )
     ( if (:contents param)
       (map
-        (fn [[key value]] (delve key (:contents params) value))
+        (fn [[key value]] (delve key (:contents param) value))
         x
       )
     )
@@ -147,13 +147,14 @@
   ( if (sequential? thing)
     ( let [[name param comment] thing]
       ( condp = (keykey name)
-        :optional (list 'optional (functify param) )
-        :nullible (list 'nullible (functify param) )
-        :either   (list 'either   (fvalues param {:choices  (partial  map functify)}) )
-        :tuple    (list 'tuple    (fvalues param {:elements (partial  map functify)}) )
-        :array    (list 'tuple    (fvalues param {:contents               functify
-                                                  :length                 functify }) )
-        :object   (list 'object   (fvalues param {:members  (partial vmap functify)}) )
+        :optional   (list 'optional   (functify param) )
+        :nullible   (list 'nullible   (functify param) )
+        :either     (list 'either     (fvalues param {:choices  (partial  map functify)}) )
+        :tuple      (list 'tuple      (fvalues param {:elements (partial  map functify)}) )
+        :array      (list 'tuple      (fvalues param {:contents               functify
+                                                      :length                 functify }) )
+        :dictionary (list 'dictionary (fvalues param {:contents               functify }) )
+        :object     (list 'object     (fvalues param {:members  (partial vmap functify)}) )
         ( list (symkey name) param )
       )
     )
