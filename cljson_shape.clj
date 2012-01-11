@@ -12,21 +12,15 @@
 (create-ns 'cljson-shape-predicates)
 
 (defmacro def-shape [name body]
-  (do
-    (println (symbol "cljson-shape-predicates" (str name)))
-    `(with-ns ~(find-ns 'cljson-shape-predicates)
-      (defn ~name
-        [~'& [~'param]]
-         (fn [~'x ~'& [~'path]]
-           ( do
-           (let [
-               ~'fail (fn [~'s] (fail-at ~'path ~'s))
-               ~'refine (fn [~'ff] (~'ff ~'x ~'path))
-               ~'delve (fn [~'index ~'rule ~'val] (~'rule ~'x (concat ~'path "/" ~'index)))
-             ]
-             ~body
-           )
-           )
+  `(intern (the-ns ~''cljson-shape-predicates) '~name
+    ( fn [& [~'param]]
+      (fn [~'x & [~'path]]
+        (let [
+            ~'fail (fn [~'s] (fail-at ~'path ~'s))
+            ~'refine (fn [~'ff] (~'ff ~'x ~'path))
+            ~'delve (fn [~'index ~'rule ~'val] (~'rule ~'x (concat ~'path "/" ~'index)))
+          ]
+          ~body
         )
       )
     )
@@ -170,9 +164,7 @@
 
 (let [validator (concat
   `(do)
-  [
-    `(println "let's begin")
-  ]
+  [`(println "let's begin")]
 
   ; iterate over the shape, declaring all the keys
   (map (fn [[key val]] `(declare ~(symkey key) ) ) shape )
@@ -181,7 +173,7 @@
   (map (fn [[key val]] `(defn ~(symkey key) [& ~'_] ~(functify val) ) ) shape )
 
   ; apply the base definition to the data
-  [`( (~'json_shape nil) ~shape )]
+  [`( (~'json_shape) ~shape )]
 ) ]
   (pprint validator)
   (when-let [error (eval `(with-ns (create-ns (gensym)) (do (clojure.core/refer ~''cljson-shape-predicates) ~validator)))] (println error))
