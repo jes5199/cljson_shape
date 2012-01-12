@@ -12,15 +12,21 @@
 (create-ns 'cljson-shape-predicates)
 
 (defmacro def-shape [name body]
-  `(intern (the-ns ~''cljson-shape-predicates) '~name
-    ( fn [& [~'param]]
-      (fn [~'x & [~'path]]
-        (let [
-            ~'fail (fn [~'s] (fail-at ~'path ~'s))
-            ~'refine (fn [~'ff] (~'ff ~'x ~'path))
-            ~'delve (fn [~'index ~'rule ~'val] (~'rule ~'x (concat ~'path "/" ~'index)))
-          ]
-          ~body
+  `(do
+    (intern (the-ns ~''cljson-shape-predicates) '~name
+      ( fn ~name [& [~'param]]
+        (do
+          (fn ~'check [~'x & [~'path]]
+            (let [
+                ~'fail (fn ~'fail [~'s] (fail-at ~'path ~'s))
+                ~'refine (fn ~'refine [~'ff] (~'ff ~'x ~'path))
+                ~'delve (fn ~'delve [~'index ~'rule ~'val] (~'rule ~'x (concat ~'path "/" ~'index)))
+              ]
+              (do
+                ~body
+              )
+            )
+          )
         )
       )
     )
@@ -146,19 +152,23 @@
 (defn functify [thing]
   ( if (sequential? thing)
     ( let [[name param comment] thing]
-      ( condp = (keykey name)
-        :optional   (list 'optional   (functify param) )
-        :nullible   (list 'nullible   (functify param) )
-        :either     (list 'either     (fvalues param {:choices  (partial  map functify)}) )
-        :tuple      (list 'tuple      (fvalues param {:elements (partial  map functify)}) )
-        :array      (list 'tuple      (fvalues param {:contents               functify
-                                                      :length                 functify }) )
-        :dictionary (list 'dictionary (fvalues param {:contents               functify }) )
-        :object     (list 'object     (fvalues param {:members  (partial vmap functify)}) )
-        ( list (symkey name) param )
+      (list (symkey name)
+        ( condp = (keykey name)
+          :optional   (functify param)
+          :nullible   (functify param)
+          :either     (fvalues param {:choices  (partial  map functify)})
+          :tuple      (fvalues param {:elements (partial  map functify)})
+          :array      (fvalues param {:contents               functify
+                                      :length                 functify })
+          :dictionary (fvalues param {:contents               functify })
+          :object     (fvalues param {:members  (partial vmap functify)})
+          :restrict   (fvalues param {:require  (partial map  functify)
+                                      :reject   (partial map  functify)})
+          param
+        )
       )
     )
-    (functify [thing])
+    (first (functify [thing]))
   )
 )
 
