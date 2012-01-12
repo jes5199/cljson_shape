@@ -26,156 +26,277 @@
  (clojure.core/defn
   tuple_parameters
   [& _]
-  (object {:members {:elements (array {:contents definition})}}))
+  (clojure.core/fn
+   [x & [path]]
+   ((object
+     {:members {:elements (array {:contents (definition nil)})}})
+    x
+    path)))
  (clojure.core/defn
   builtin_type_with_mandatory_parameters
   [& _]
-  (enum
-   {:values
-    ["literal" "optional" "nullable" "enum" "tuple" "either"]}))
+  (clojure.core/fn
+   [x & [path]]
+   ((enum
+     {:values
+      ["literal" "optional" "nullable" "enum" "tuple" "either"]})
+    x
+    path)))
  (clojure.core/defn
   definition_pair
   [& _]
-  (either
-   {:choices
-    ((tuple {:elements (custom_type (literal {}) comment)})
-     (tuple
-      {:elements
-       (builtin_type_without_parameters (literal {}) comment)})
-     (tuple {:elements ((literal "literal") anything comment)})
-     (tuple {:elements ((literal "optional") definition comment)})
-     (tuple {:elements ((literal "nullable") definition comment)})
-     (tuple {:elements ((literal "string") string_parameters comment)})
-     (tuple {:elements ((literal "number") number_parameters comment)})
-     (tuple
-      {:elements ((literal "integer") integer_parameters comment)})
-     (tuple {:elements ((literal "array") array_parameters comment)})
-     (tuple {:elements ((literal "object") object_parameters comment)})
-     (tuple
-      {:elements
-       ((literal "dictionary") dictionary_parameters comment)})
-     (tuple
-      {:elements ((literal "restrict") restrict_parameters comment)})
-     (tuple {:elements ((literal "enum") enum_parameters comment)})
-     (tuple {:elements ((literal "tuple") tuple_parameters comment)})
-     (tuple
-      {:elements ((literal "either") either_parameters comment)}))}))
+  (clojure.core/fn
+   [x & [path]]
+   ((either
+     {:choices
+      [(tuple
+        {:elements [(custom_type nil) (literal {}) (comment nil)]})
+       (tuple
+        {:elements
+         [(builtin_type_without_parameters nil)
+          (literal {})
+          (comment nil)]})
+       (tuple
+        {:elements [(literal "literal") (anything nil) (comment nil)]})
+       (tuple
+        {:elements
+         [(literal "optional") (definition nil) (comment nil)]})
+       (tuple
+        {:elements
+         [(literal "nullable") (definition nil) (comment nil)]})
+       (tuple
+        {:elements
+         [(literal "string") (string_parameters nil) (comment nil)]})
+       (tuple
+        {:elements
+         [(literal "number") (number_parameters nil) (comment nil)]})
+       (tuple
+        {:elements
+         [(literal "integer") (integer_parameters nil) (comment nil)]})
+       (tuple
+        {:elements
+         [(literal "array") (array_parameters nil) (comment nil)]})
+       (tuple
+        {:elements
+         [(literal "object") (object_parameters nil) (comment nil)]})
+       (tuple
+        {:elements
+         [(literal "dictionary")
+          (dictionary_parameters nil)
+          (comment nil)]})
+       (tuple
+        {:elements
+         [(literal "restrict")
+          (restrict_parameters nil)
+          (comment nil)]})
+       (tuple
+        {:elements
+         [(literal "enum") (enum_parameters nil) (comment nil)]})
+       (tuple
+        {:elements
+         [(literal "tuple") (tuple_parameters nil) (comment nil)]})
+       (tuple
+        {:elements
+         [(literal "either")
+          (either_parameters nil)
+          (comment nil)]})]})
+    x
+    path)))
  (clojure.core/defn
   array_parameters
   [& _]
-  (object
-   {:members
-    {:contents optional_definition, :length optional_definition}}))
+  (clojure.core/fn
+   [x & [path]]
+   ((object
+     {:members
+      {:contents (optional_definition nil),
+       :length (optional_definition nil)}})
+    x
+    path)))
  (clojure.core/defn
   builtin_type_with_optional_parameters
   [& _]
-  (enum
-   {:values
-    ["string"
-     "number"
-     "integer"
-     "array"
-     "object"
-     "dictionary"
-     "restrict"]}))
- (clojure.core/defn comment [& _] (optional string))
- (clojure.core/defn optional_definition [& _] (optional definition))
+  (clojure.core/fn
+   [x & [path]]
+   ((enum
+     {:values
+      ["string"
+       "number"
+       "integer"
+       "array"
+       "object"
+       "dictionary"
+       "restrict"]})
+    x
+    path)))
+ (clojure.core/defn
+  comment
+  [& _]
+  (clojure.core/fn [x & [path]] ((optional (string nil)) x path)))
+ (clojure.core/defn
+  optional_definition
+  [& _]
+  (clojure.core/fn [x & [path]] ((optional (definition nil)) x path)))
  (clojure.core/defn
   integer_parameters
   [& _]
-  (object
-   {:members {:min (optional integer), :max (optional integer)}}))
+  (clojure.core/fn
+   [x & [path]]
+   ((object
+     {:members
+      {:min (optional (integer nil)), :max (optional (integer nil))}})
+    x
+    path)))
  (clojure.core/defn
   json_shape
   [& _]
-  (dictionary {:contents definition}))
+  (clojure.core/fn
+   [x & [path]]
+   ((dictionary {:contents (definition nil)}) x path)))
  (clojure.core/defn
   definition_atom
   [& _]
-  (either
-   {:choices
-    (custom_type
-     builtin_type_with_optional_parameters
-     builtin_type_without_parameters)}))
+  (clojure.core/fn
+   [x & [path]]
+   ((either
+     {:choices
+      [(custom_type nil)
+       (builtin_type_with_optional_parameters nil)
+       (builtin_type_without_parameters nil)]})
+    x
+    path)))
  (clojure.core/defn
   dictionary_parameters
   [& _]
-  (object
-   {:members
-    {:keys (optional string), :contents optional_definition}}))
+  (clojure.core/fn
+   [x & [path]]
+   ((object
+     {:members
+      {:keys (optional (string nil)),
+       :contents (optional_definition nil)}})
+    x
+    path)))
  (clojure.core/defn
   string_parameters
   [& _]
-  (object {:members {:matches (optional string)}}))
+  (clojure.core/fn
+   [x & [path]]
+   ((object {:members {:matches (optional (string nil))}}) x path)))
  (clojure.core/defn
   builtin_type
   [& _]
-  (enum
-   {:values
-    ["string"
-     "number"
-     "boolean"
-     "null"
-     "undefined"
-     "array"
-     "object"
-     "anything"
-     "literal"
-     "optional"
-     "nullable"
-     "integer"
-     "enum"
-     "tuple"
-     "dictionary"
-     "either"
-     "restrict"]}))
+  (clojure.core/fn
+   [x & [path]]
+   ((enum
+     {:values
+      ["string"
+       "number"
+       "boolean"
+       "null"
+       "undefined"
+       "array"
+       "object"
+       "anything"
+       "literal"
+       "optional"
+       "nullable"
+       "integer"
+       "enum"
+       "tuple"
+       "dictionary"
+       "either"
+       "restrict"]})
+    x
+    path)))
  (clojure.core/defn
   object_parameters
   [& _]
-  (object
-   {:members
-    {:members (optional (dictionary {:contents definition})),
-     :allow_extra (optional boolean),
-     :allow_missing (optional boolean)}}))
+  (clojure.core/fn
+   [x & [path]]
+   ((object
+     {:members
+      {:members (optional (dictionary {:contents (definition nil)})),
+       :allow_extra (optional (boolean nil)),
+       :allow_missing (optional (boolean nil))}})
+    x
+    path)))
  (clojure.core/defn
   enum_parameters
   [& _]
-  (object {:members {:values (array {:contents anything})}}))
+  (clojure.core/fn
+   [x & [path]]
+   ((object {:members {:values (array {:contents (anything nil)})}})
+    x
+    path)))
  (clojure.core/defn
   definition
   [& _]
-  (either
-   {:choices (definition_atom definition_singleton definition_pair)}))
+  (clojure.core/fn
+   [x & [path]]
+   ((either
+     {:choices
+      [(definition_atom nil)
+       (definition_singleton nil)
+       (definition_pair nil)]})
+    x
+    path)))
  (clojure.core/defn
   definition_singleton
   [& _]
-  (tuple {:elements (definition_atom)}))
+  (clojure.core/fn
+   [x & [path]]
+   ((tuple {:elements [(definition_atom nil)]}) x path)))
  (clojure.core/defn
   optional_definitions
   [& _]
-  (optional (array {:contents definition})))
+  (clojure.core/fn
+   [x & [path]]
+   ((optional (array {:contents (definition nil)})) x path)))
  (clojure.core/defn
   restrict_parameters
   [& _]
-  (object
-   {:members
-    {:require optional_definitions, :reject optional_definitions}}))
+  (clojure.core/fn
+   [x & [path]]
+   ((object
+     {:members
+      {:require (optional_definitions nil),
+       :reject (optional_definitions nil)}})
+    x
+    path)))
  (clojure.core/defn
   builtin_type_without_parameters
   [& _]
-  (enum {:values ["boolean" "null" "undefined" "anything"]}))
+  (clojure.core/fn
+   [x & [path]]
+   ((enum {:values ["boolean" "null" "undefined" "anything"]})
+    x
+    path)))
  (clojure.core/defn
   number_parameters
   [& _]
-  (object {:members {:min (optional number), :max (optional number)}}))
+  (clojure.core/fn
+   [x & [path]]
+   ((object
+     {:members
+      {:min (optional (number nil)), :max (optional (number nil))}})
+    x
+    path)))
  (clojure.core/defn
   custom_type
   [& _]
-  (restrict {:require (string), :reject (builtin_type)}))
+  (clojure.core/fn
+   [x & [path]]
+   ((restrict {:require [(string nil)], :reject [(builtin_type nil)]})
+    x
+    path)))
  (clojure.core/defn
   either_parameters
   [& _]
-  (object {:members {:choices (array {:contents definition})}}))
+  (clojure.core/fn
+   [x & [path]]
+   ((object {:members {:choices (array {:contents (definition nil)})}})
+    x
+    path)))
  ((json_shape)
   {:tuple_parameters
    ["object"
@@ -313,4 +434,3 @@
    ["object"
     {:members {:choices ["array" {:contents "definition"}]}}]}))
 let's begin
-(#<cljson_shape$eval1864$either__1866$check__1869 cljson_shape$eval1864$either__1866$check__1869@26114629> #<cljson_shape$eval1864$either__1866$check__1869 cljson_shape$eval1864$either__1866$check__1869@38154145> #<cljson_shape$eval1864$either__1866$check__1869 cljson_shape$eval1864$either__1866$check__1869@7b7035c6> #<cljson_shape$eval1864$either__1866$check__1869 cljson_shape$eval1864$either__1866$check__1869@3da997a> #<cljson_shape$eval1864$either__1866$check__1869 cljson_shape$eval1864$either__1866$check__1869@4921a90> #<cljson_shape$eval1864$either__1866$check__1869 cljson_shape$eval1864$either__1866$check__1869@140de648> #<cljson_shape$eval1864$either__1866$check__1869 cljson_shape$eval1864$either__1866$check__1869@1c898b41> #<cljson_shape$eval1864$either__1866$check__1869 cljson_shape$eval1864$either__1866$check__1869@a15670a> #<cljson_shape$eval1864$either__1866$check__1869 cljson_shape$eval1864$either__1866$check__1869@31fc6b2> #<cljson_shape$eval1864$either__1866$check__1869 cljson_shape$eval1864$either__1866$check__1869@1b2dd1b8> #<cljson_shape$eval1864$either__1866$check__1869 cljson_shape$eval1864$either__1866$check__1869@5d2394f8> #<cljson_shape$eval1864$either__1866$check__1869 cljson_shape$eval1864$either__1866$check__1869@4b09558d> #<cljson_shape$eval1864$either__1866$check__1869 cljson_shape$eval1864$either__1866$check__1869@51cfc277> #<cljson_shape$eval1864$either__1866$check__1869 cljson_shape$eval1864$either__1866$check__1869@1ee83c97> #<cljson_shape$eval1864$either__1866$check__1869 cljson_shape$eval1864$either__1866$check__1869@20e1ed5b> #<cljson_shape$eval1864$either__1866$check__1869 cljson_shape$eval1864$either__1866$check__1869@50a6023a> #<cljson_shape$eval1864$either__1866$check__1869 cljson_shape$eval1864$either__1866$check__1869@42dc5733> #<cljson_shape$eval1864$either__1866$check__1869 cljson_shape$eval1864$either__1866$check__1869@fe0f790> #<cljson_shape$eval1864$either__1866$check__1869 cljson_shape$eval1864$either__1866$check__1869@7a9d1714> #<cljson_shape$eval1864$either__1866$check__1869 cljson_shape$eval1864$either__1866$check__1869@5f5660ef> #<cljson_shape$eval1864$either__1866$check__1869 cljson_shape$eval1864$either__1866$check__1869@1ff61bcf> #<cljson_shape$eval1864$either__1866$check__1869 cljson_shape$eval1864$either__1866$check__1869@569bc36d> #<cljson_shape$eval1864$either__1866$check__1869 cljson_shape$eval1864$either__1866$check__1869@c3b5587>)

@@ -20,7 +20,7 @@
             (let [
                 ~'fail (fn ~'fail [~'s] (fail-at ~'path ~'s))
                 ~'refine (fn ~'refine [~'ff] (~'ff ~'x ~'path))
-                ~'delve (fn ~'delve [~'index ~'rule ~'val] (~'rule ~'x (concat ~'path "/" ~'index)))
+                ~'delve (fn ~'delve [~'index ~'rule ~'val] (~'rule ~'val (concat ~'path "/" ~'index)))
               ]
               (do
                 ~body
@@ -96,14 +96,16 @@
   ( or
     ( if-not (map? x) (fail "isn't an object") )
     ( if (:keys param)
-      (map
-        (fn [key] (delve key (:keys param) keys))
+      (reduce
+        (fn [r key] (or r (delve key (:keys param) keys)))
+        false
         (keys x)
       )
     )
     ( if (:contents param)
-      (map
-        (fn [[key value]] (delve key (:contents param) value))
+      (reduce
+        (fn [r [key value]] (or r (delve key (:contents param) value)))
+        false
         x
       )
     )
@@ -147,7 +149,9 @@
 
 (defn fvalues [hash conversions] (merge-apply hash conversions) )
 
-(defn vmap [f hash] (apply array-map (mapcat (fn [[k v]] [k (f v)]) hash )))
+(defn valmap [f hash] (apply array-map (mapcat (fn [[k v]] [k (f v)]) hash )))
+
+(defn vecmap [f ary] (apply vector (map f ary)))
 
 (defn functify [thing]
   ( if (sequential? thing)
@@ -156,35 +160,42 @@
         ( condp = (keykey name)
           :optional   (functify param)
           :nullible   (functify param)
-          :either     (fvalues param {:choices  (partial  map functify)})
-          :tuple      (fvalues param {:elements (partial  map functify)})
-          :array      (fvalues param {:contents               functify
-                                      :length                 functify })
-          :dictionary (fvalues param {:contents               functify })
-          :object     (fvalues param {:members  (partial vmap functify)})
-          :restrict   (fvalues param {:require  (partial map  functify)
-                                      :reject   (partial map  functify)})
+          :either     (fvalues param {:choices  (partial vecmap functify)})
+          :tuple      (fvalues param {:elements (partial vecmap functify)})
+          :array      (fvalues param {:contents                 functify
+                                      :length                   functify })
+          :dictionary (fvalues param {:contents                 functify })
+          :object     (fvalues param {:members  (partial valmap functify)})
+          :restrict   (fvalues param {:require  (partial vecmap functify)
+                                      :reject   (partial vecmap functify)})
           param
         )
       )
     )
-    (first (functify [thing]))
+    (functify [thing])
   )
 )
 
+; (clojure.core/refer 'cljson-shape-predicates)
+; (print ( (dictionary {:contents (number nil)})
+;   {1 1}
+; ) )
+; (throw ())
+
+
 (let [validator (concat
-  `(do)
-  [`(println "let's begin")]
+    `(do)
+    [`(println "let's begin")]
 
-  ; iterate over the shape, declaring all the keys
-  (map (fn [[key val]] `(declare ~(symkey key) ) ) shape )
+    ; iterate over the shape, declaring all the keys
+    (map (fn [[key val]] `(declare ~(symkey key) ) ) shape )
 
-  ; iterate over the shape, declaring each definition
-  (map (fn [[key val]] `(defn ~(symkey key) [& ~'_] ~(functify val) ) ) shape )
+    ; iterate over the shape, declaring each definition
+    (map (fn [[key val]] `(defn ~(symkey key) [& ~'_] (fn [~'x ~'& [~'path] ] (~(functify val) ~'x ~'path ) ) ) ) shape )
 
-  ; apply the base definition to the data
-  [`( (~'json_shape) ~shape )]
-) ]
+    ; apply the base definition to the data
+    [`( (~'json_shape) ~shape )]
+  ) ]
   (pprint validator)
-  (when-let [error (eval `(with-ns (create-ns (gensym)) (do (clojure.core/refer ~''cljson-shape-predicates) ~validator)))] (println error))
+  (when-let [error (eval `(with-ns (create-ns (gensym)) (do (clojure.core/refer ~''cljson-shape-predicates) ~validator)))] (println {:error error}))
 )
