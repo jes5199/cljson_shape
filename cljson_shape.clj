@@ -73,11 +73,11 @@
 )
 
 (def-shape nullable
-  ( if-not (nil? x) (fail "isn't null") )
+  ( if-not (nil? x) (refine param) )
 )
 
 (def-shape null
-  ( if-not (nil? x) (refine param) )
+  ( if-not (nil? x) (fail "isn't null") )
 )
 
 (def-shape object
@@ -87,6 +87,17 @@
 (def-shape array
   ( or
     ( if-not (sequential? x) (fail "isn't an array") )
+    ( if (:contents param)
+      ( do
+        ( second
+          (reduce
+            (fn [[n r] value] [ (+ n 1) (or r (delve (str n) (:contents param) value))] )
+            [0 false]
+            x
+          )
+        )
+      )
+    )
     ; TODO contents
     ; TODO length
   )
@@ -103,10 +114,12 @@
       )
     )
     ( if (:contents param)
-      (reduce
-        (fn [r [key value]] (or r (delve key (:contents param) value)))
-        false
-        x
+      ( do
+        (reduce
+          (fn [r [k value]] (or r (delve k (:contents param) value)))
+          false
+          x
+        )
       )
     )
   )
@@ -121,7 +134,13 @@
 )
 
 (def-shape tuple
-  ( cljson-shape-predicates/array nil x)
+  ( and
+    ( cljson-shape-predicates/array nil x)
+    ( if (:elements param)
+      (map (fn [f a] (f a)) (:elements param) (lazy-cat x (repeat :undefined)))
+      ; TODO: does the ruby lib support "allow_extra" ?
+    )
+  )
 )
 
 (def-shape restrict
@@ -182,6 +201,76 @@
 ; ) )
 ; (throw ())
 
+( defmacro assert-checks [predicate subject]
+  (if (coll? predicate)
+    `(
+      assert ( = nil (~(seq predicate) ~subject) )
+    )
+    `(
+      assert ( = nil ((~predicate) ~subject) )
+    )
+  )
+)
+
+( defmacro assert-fails [predicate subject]
+  (if (coll? predicate)
+    `(
+      assert ( not= nil (~(seq predicate) ~subject) )
+    )
+    `(
+      assert ( not= nil ((~predicate) ~subject) )
+    )
+  )
+)
+
+( assert-checks cljson-shape-predicates/anything "x" )
+( assert-checks cljson-shape-predicates/anything 1 )
+( assert-checks cljson-shape-predicates/anything [] )
+( assert-checks cljson-shape-predicates/anything {} )
+
+( assert-checks [cljson-shape-predicates/literal {"x" "y"}] {"x" "y"} )
+( assert-checks [cljson-shape-predicates/literal "x"] "x" )
+
+( assert-checks [cljson-shape-predicates/literal false] false )
+( assert-fails [cljson-shape-predicates/literal false] true )
+
+( assert-fails [cljson-shape-predicates/literal {"x" "y"}] "x" )
+( assert-fails [cljson-shape-predicates/literal {"x" "z"}] {"x" "y"} )
+( assert-fails [cljson-shape-predicates/literal "1"] 1 )
+
+; the nullable type
+( assert-checks [cljson-shape-predicates/nullable (cljson-shape-predicates/string)] "x")
+( assert-checks [cljson-shape-predicates/nullable (cljson-shape-predicates/literal {"x" "y"})] {"x" "y"})
+
+( assert-checks [cljson-shape-predicates/nullable (cljson-shape-predicates/string)] nil)
+( assert-checks [cljson-shape-predicates/nullable (cljson-shape-predicates/literal {"x" "y"})] nil)
+
+( assert-fails [cljson-shape-predicates/nullable (cljson-shape-predicates/number)] "x")
+
+; the string type
+( assert-checks cljson-shape-predicates/string "x")
+( assert-fails cljson-shape-predicates/string 1)
+( assert-fails cljson-shape-predicates/string {})
+( assert-fails cljson-shape-predicates/string nil)
+( assert-fails cljson-shape-predicates/string ["a"])
+( assert-fails cljson-shape-predicates/string true)
+( assert-fails cljson-shape-predicates/string false)
+
+( assert-checks (cljson-shape-predicates/string {}) "x")
+( assert-checks (cljson-shape-predicates/string {"matches" "^\\w+;\\w+-\\w+$"}) "my;fancy-string")
+; pending ( assert-fails (cljson-shape-predicates/string {"matches" "^\\w+;\\w+-\\w+$"}) "my;fancy-string with.other/characters")
+
+; XXX
+( assert-fails cljson-shape-predicates/number [] )
+
+; the array type
+( assert-checks (cljson-shape-predicates/array) [1])
+( assert-checks (cljson-shape-predicates/array {:contents (cljson-shape-predicates/number nil)}) [1])
+( assert-fails (cljson-shape-predicates/array {:contents (cljson-shape-predicates/number nil)}) [[]])
+
+( assert-checks cljson-shape-predicates/number 1 )
+( assert-fails cljson-shape-predicates/number {} )
+( assert-fails cljson-shape-predicates/number [] )
 
 (let [validator (concat
     `(do)
