@@ -260,13 +260,18 @@
 ( assert-checks (cljson-shape-predicates/string {"matches" "^\\w+;\\w+-\\w+$"}) "my;fancy-string")
 ; pending ( assert-fails (cljson-shape-predicates/string {"matches" "^\\w+;\\w+-\\w+$"}) "my;fancy-string with.other/characters")
 
-; XXX
-( assert-fails cljson-shape-predicates/number [] )
-
 ; the array type
 ( assert-checks (cljson-shape-predicates/array) [1])
 ( assert-checks (cljson-shape-predicates/array {:contents (cljson-shape-predicates/number nil)}) [1])
 ( assert-fails (cljson-shape-predicates/array {:contents (cljson-shape-predicates/number nil)}) [[]])
+
+; the either type
+( assert-checks (cljson-shape-predicates/either {:choices [(cljson-shape-predicates/array nil) (cljson-shape-predicates/number nil) ]}) [])
+( assert-checks (cljson-shape-predicates/either {:choices [(cljson-shape-predicates/array nil) (cljson-shape-predicates/number nil) ]}) 1)
+
+
+; XXX
+( assert-fails cljson-shape-predicates/number [] )
 
 ( assert-checks cljson-shape-predicates/number 1 )
 ( assert-fails cljson-shape-predicates/number {} )
